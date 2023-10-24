@@ -1,0 +1,87 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* コンテンツを中央寄せに */
+}
+
+.container-fluid {
+}
+
+.f-1 {
+    flex: 1; /* 各ボックスが均等な幅になるように */
+}
+
+h3 {
+    color: #333;
+}
+
+.box {
+    position: relative;
+    width: 100%; /* ボックスの幅を最大に */
+    height: 150px; /* 打席の高さを少し大きく */
+    border: 2px solid black;
+    background-color: white;
+    border-radius: 5px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.box-header {
+    font-size: 2.0rem;
+    background-color: black; /* 背景色を黒に */
+    color: white; /* 文字色を白に */
+    width: 100%; /* 全幅を取るように */
+    padding: 1px 0; /* 上下に少し余白を持たせる */
+    position: absolute; /* 絶対位置指定 */
+    top: 0; /* ボックスの最上部に配置 */
+    left: 0; /* ボックスの最左部から配置 */
+}
+
+
+.box-body {
+    padding: 0 5px;
+    margin-top:3.4rem;
+    font-size: 2.0rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.box-body.inactive {
+    color: lightgray;
+}
+
+.flashing {
+    animation: flashRedWhite 1s infinite;
+}
+
+@keyframes flashRedWhite {
+    0% {background-color: lightcoral;}
+    50% {background-color: white;}
+    100% {background-color: lightcoral;}
+}
+
+/* モーダルのスタイル調整 */
+.modal-title {
+    color: #333;
+}
+
+.modal-body {
+    color: #555;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
