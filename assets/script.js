@@ -1,3 +1,5 @@
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzez8BPtgYs8KW7tqr0fwMXxU78w2Kyf6wxui8YIv0tCdQU88aeRhqtHJjToKAjc_TW/exec";
+
 let timers = {};
 let selectedBoxId = null;
 let config = {};  // この行を追加
@@ -5,10 +7,10 @@ let config = {};  // この行を追加
 
 $(document).ready(function() {
 
-    // config.jsonを非同期的に読み込む
-    $.getJSON('config.json', function(data) {
-        const weekdayTimers = data["weekday"];
-        const holidayTimers = data["holiday"];
+    getConfig().then(data => {
+        config = data;
+        const weekdayTimers = config["weekday"];
+        const holidayTimers = config["holiday"];
         
         // 平日のタイマーをセット
         for (let time of weekdayTimers) {
@@ -25,6 +27,20 @@ $(document).ready(function() {
         }
     });
 
+    getTimers().then(data => {
+        timers = data;
+        for (let boxId in timers) {
+            updateBoxBasedOnStartTime(boxId);
+        }
+        $(".box").each(function() {
+            let boxId = $(this).data("box-id");
+            if (!timers[boxId]) {
+                // タイマーが動作していない打席の場合
+                $(this).find(".box-body").addClass("inactive");
+            }
+        });
+    });
+
     function updateTimersOnServer() {
         $.ajax({
             url: '/update_timers',
@@ -34,24 +50,6 @@ $(document).ready(function() {
             dataType: 'json'
         });
     }
-
-    // ページの読み込み時にタイマーの情報を取得
-    $.get('/get_timers', function(data) {
-        timers = data;
-        for (let boxId in timers) {
-            updateBoxBasedOnStartTime(boxId);
-        }
-        $(".box").each(function() {
-            let boxId = $(this).data("box-id");
-            console.log(timers[boxId]);
-            if (!timers[boxId]) {
-                // タイマーが動作していない打席の場合
-                $(this).find(".box-body").addClass("inactive");
-            }
-        });
-
-
-    });
 
     
     $(".box").on("click", function() {
@@ -79,8 +77,8 @@ $(document).ready(function() {
         box.removeClass("flashing");
         box.css("background-color", "white");
         box.find(".box-body").text("00:00");
+        endTimer(selectedBoxId);  // ← ここでendTimer関数を呼び出します
         delete timers[selectedBoxId];  // timersオブジェクトから該当打席の情報を削除
-        updateTimersOnServer();  // timers.jsonを更新
         $("#endUseModal").modal("hide");
     });
     
@@ -90,25 +88,26 @@ $(document).ready(function() {
         let box = $(`.box[data-box-id="${selectedBoxId}"]`);
         box.find(".box-body").removeClass("inactive");
         let time = parseInt($(this).data("time"));
+        startTimer(selectedBoxId, time);  // ← ここでstartTimer関数を呼び出します
         timers[selectedBoxId] = {
             start_time: new Date().getTime(), // 現在の時刻を開始時間として保存
             duration: time
         };
-        updateTimersOnServer(); // timers.jsonを更新
         updateBoxBasedOnStartTime(selectedBoxId); // 直ちに打席の表示を更新
         $("#timerModal").modal("hide"); // モーダルを非表示にする
     });
 
     // 打席使用キャンセルモーダルのOKボタンをクリックしたときの動作
-    $("#cancelModal .btn-primary").on("click", function() {
+    $("#cancelModal .btn-primary").on("click", function () {
         let box = $(`.box[data-box-id="${selectedBoxId}"]`);
         box.find(".box-body").addClass("inactive");
         clearInterval(timers[selectedBoxId].intervalId); // タイマーをクリア
+        endTimer(selectedBoxId);  // ← ここでendTimer関数を呼び出します
         delete timers[selectedBoxId]; // タイマーの情報を削除
         box.css("background-color", "white");
         box.find(".box-body").text("00:00");
         $("#cancelModal").modal("hide"); // モーダルを閉じる
-        updateTimersOnServer();  // timers.jsonを更新
+
     });
 
     setInterval(function() {
@@ -140,15 +139,61 @@ function updateBoxBasedOnStartTime(boxId) {
     updateBox(boxId, remainingTime);
 }
 
+function getConfig() {
+    return fetch(GAS_ENDPOINT + "?action=getConfig")
+        .then(response => response.json())
+        .then(data => {
+            let config = {};
+            data.forEach(row => {
+                config[row[0]] = row.slice(1); // カラム名を除去
+            });
+            return config;
+        });
+}
 
+function getTimers() {
+    return fetch(GAS_ENDPOINT + "?action=getTimers")
+        .then(response => response.json())
+        .then(data => {
+            let timers = {};
+            data.forEach(row => {
+                timers[row[0]] = {
+                    startTime: new Date(row[1]),
+                    endTime: new Date(row[2]),
+                    duration: row[3]
+                };
+            });
+            return timers;
+        });
+}
 
-function updateTimersOnServer() {
-    $.ajax({
-        url: '/update_timers',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(timers),
-        dataType: 'json'
+function startTimer(boxId, duration) {
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + duration * 60000);
+
+    const data = {
+        boxId: boxId,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        duration: duration
+    };
+
+    fetch(GAS_ENDPOINT + "?action=startTimer", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    });
+}
+
+function endTimer(boxId) {
+    fetch(GAS_ENDPOINT + "?action=endTimer", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ boxId: boxId })
     });
 }
 
