@@ -5,6 +5,26 @@ let config = {};  // この行を追加
 
 $(document).ready(function() {
 
+    // config.jsonを非同期的に読み込む
+    $.getJSON('config.json', function(data) {
+        const weekdayTimers = data["weekday"];
+        const holidayTimers = data["holiday"];
+        
+        // 平日のタイマーをセット
+        for (let time of weekdayTimers) {
+            $('#weekday-timers').append(
+                `<button class="btn btn-primary m-1" data-time="${time * 60}">${time}分</button>`
+            );
+        }
+
+        // 休日のタイマーをセット
+        for (let time of holidayTimers) {
+            $('#holiday-timers').append(
+                `<button class="btn btn-secondary m-1" data-time="${time * 60}">${time}分</button>`
+            );
+        }
+    });
+
     function updateTimersOnServer() {
         $.ajax({
             url: '/update_timers',
