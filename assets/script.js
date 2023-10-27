@@ -1,4 +1,4 @@
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby4qUvQjVmWQlxqWA35N_Bn400H9aElgLK0zmTK2U-SqzcLjtPe15-k3fhxIrEWcjbj/exec";
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyACz_QTtpyRNDwg5foerxCT4NrZ0TlCcecaYaTlDZSOW88jDeHVOQNOkpfYNpZas0s/exec"
 
 
 let timers = {};
@@ -9,6 +9,7 @@ let config = {};  // この行を追加
 $(document).ready(function() {
 
     getConfig().then(data => {
+        console.log(data);
         config = data;
         const weekdayTimers = config["weekday"];
         const holidayTimers = config["holiday"];
@@ -29,6 +30,7 @@ $(document).ready(function() {
     });
 
     getTimers().then(data => {
+        console.log(data);
         timers = data;
         for (let boxId in timers) {
             updateBoxBasedOnStartTime(boxId);
@@ -133,11 +135,10 @@ function getConfig() {
     return fetch(GAS_ENDPOINT + "?action=getConfig")
         .then(response => response.json())
         .then(data => {
-            let config = {};
-            config = data;
-            //data.forEach(row => {
-            //    config[row[0]] = row.slice(1); // カラム名を除去
-            //});
+            const config = {
+                holiday: data.map(item => item[0]),
+                weekday: data.map(item => item[1])
+            };
             return config;
         });
 }
@@ -147,13 +148,7 @@ function getTimers() {
         .then(response => response.json())
         .then(data => {
             let timers = {};
-            data.forEach(row => {
-                timers[row[0]] = {
-                    startTime: new Date(row[1]),
-                    endTime: new Date(row[2]),
-                    duration: row[3]
-                };
-            });
+            timers = data;
             return timers;
         });
 }
