@@ -1,4 +1,4 @@
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyACz_QTtpyRNDwg5foerxCT4NrZ0TlCcecaYaTlDZSOW88jDeHVOQNOkpfYNpZas0s/exec"
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzqsTycExXZv77vedkedxCQzrnGNxjSgjhU9zmRfiqUUACQVfwmawOG5ZDavQTd64Gm/exec";
 
 
 let timers = {};
@@ -17,16 +17,32 @@ $(document).ready(function() {
         // 平日のタイマーをセット
         for (let time of weekdayTimers) {
             $('#weekday-timers').append(
-                `<button class="btn btn-primary m-1" data-time="${time * 60}">${time}分</button>`
+                `<button class="btn btn-primary m-1" data-time="${time}">${time}分</button>`
             );
         }
 
         // 休日のタイマーをセット
         for (let time of holidayTimers) {
             $('#holiday-timers').append(
-                `<button class="btn btn-secondary m-1" data-time="${time * 60}">${time}分</button>`
+                `<button class="btn btn-secondary m-1" data-time="${time}">${time}分</button>`
             );
         }
+
+        // タイマーの開始
+        $("#timerModal .btn-primary, #timerModal .btn-secondary").on("click", function() {
+            let box = $(`.box[data-box-id="${selectedBoxId}"]`);
+            box.find(".box-body").removeClass("inactive");
+            let time = parseInt($(this).data("time"));
+            startTimer(selectedBoxId, time);  // ← ここでstartTimer関数を呼び出します
+            timers[selectedBoxId] = {
+                start_time: new Date().getTime(), // 現在の時刻を開始時間として保存
+                duration: time
+            };
+            updateBoxBasedOnStartTime(selectedBoxId); // 直ちに打席の表示を更新
+            $("#timerModal").modal("hide"); // モーダルを非表示にする
+        });
+
+
     });
 
     getTimers().then(data => {
@@ -75,20 +91,6 @@ $(document).ready(function() {
     });
     
 
-    // タイマーの開始
-    $("#timerModal .btn-primary, #timerModal .btn-secondary").on("click", function() {
-        let box = $(`.box[data-box-id="${selectedBoxId}"]`);
-        box.find(".box-body").removeClass("inactive");
-        let time = parseInt($(this).data("time"));
-        startTimer(selectedBoxId, time);  // ← ここでstartTimer関数を呼び出します
-        timers[selectedBoxId] = {
-            start_time: new Date().getTime(), // 現在の時刻を開始時間として保存
-            duration: time
-        };
-        updateBoxBasedOnStartTime(selectedBoxId); // 直ちに打席の表示を更新
-        $("#timerModal").modal("hide"); // モーダルを非表示にする
-    });
-
     // 打席使用キャンセルモーダルのOKボタンをクリックしたときの動作
     $("#cancelModal .btn-primary").on("click", function () {
         let box = $(`.box[data-box-id="${selectedBoxId}"]`);
@@ -106,12 +108,12 @@ $(document).ready(function() {
         for (let boxId in timers) {
             updateBoxBasedOnStartTime(boxId);
         }
-    }, 500);
+    }, 300);
 });
 
 function updateBoxBasedOnStartTime(boxId) {
-    let startTime = timers[boxId].start_time;
-    let duration = timers[boxId].duration;
+    let startTime = new Date(timers[boxId].start_time);
+    let duration = timers[boxId].duration * 60;
     let elapsedTime = Math.floor((new Date().getTime() - startTime) / 1000);
     let remainingTime = duration - elapsedTime;
     
@@ -154,20 +156,19 @@ function getTimers() {
 }
 
 function startTimer(boxId, duration) {
+    console.log("StartTimer");
     const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + duration * 60000);
 
     const data = {
         boxId: boxId,
         startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
         duration: duration
     };
 
     fetch(GAS_ENDPOINT + "?action=startTimer", {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: JSON.stringify(data)
     });
@@ -177,7 +178,7 @@ function endTimer(boxId) {
     fetch(GAS_ENDPOINT + "?action=endTimer", {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: JSON.stringify({ boxId: boxId })
     });
