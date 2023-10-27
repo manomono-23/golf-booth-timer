@@ -66,10 +66,8 @@ $(document).ready(function() {
         if (!timers[selectedBoxId]) {
             $("#timerModal").modal("show");
         } else {
-            let elapsedTime = Math.floor((new Date().getTime() - timers[selectedBoxId].start_time) / 1000);
-            let remainingTime = timers[selectedBoxId].duration - elapsedTime;
-    
-            if (remainingTime <= 0) {
+            let box = $(`.box[data-box-id="${selectedBoxId}"]`);
+            if (box.hasClass("flashing")) {
                 // 打席の使用を終了するかどうかを確認するモーダルを表示
                 $("#endUseModal").modal("show");
             } else {
