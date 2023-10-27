@@ -133,9 +133,10 @@ function getConfig() {
         .then(response => response.json())
         .then(data => {
             let config = {};
-            data.forEach(row => {
-                config[row[0]] = row.slice(1); // カラム名を除去
-            });
+            config = data;
+            //data.forEach(row => {
+            //    config[row[0]] = row.slice(1); // カラム名を除去
+            //});
             return config;
         });
 }
