@@ -1,4 +1,4 @@
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxPB9uoXrpz-MdA7KAsnNxWRUJf1Nwlh5KrQJ1ZHzRFI1S1F6_s_CeeTTnQC74aRCuk/exec";
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycby4qUvQjVmWQlxqWA35N_Bn400H9aElgLK0zmTK2U-SqzcLjtPe15-k3fhxIrEWcjbj/exec";
 
 
 let timers = {};
