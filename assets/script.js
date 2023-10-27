@@ -41,17 +41,6 @@ $(document).ready(function() {
         });
     });
 
-    function updateTimersOnServer() {
-        $.ajax({
-            url: '/update_timers',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(timers),
-            dataType: 'json'
-        });
-    }
-
-    
     $(".box").on("click", function() {
         selectedBoxId = $(this).data("box-id");
         
