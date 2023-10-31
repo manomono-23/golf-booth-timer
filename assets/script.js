@@ -1,5 +1,4 @@
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzqsTycExXZv77vedkedxCQzrnGNxjSgjhU9zmRfiqUUACQVfwmawOG5ZDavQTd64Gm/exec";
-
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwR0C4y_OGx9rbyZQosiDfF141ODi0omCYiH1ao-qcA3npbzf9OjEuLnh8BoFA-Bddi/exec";
 
 let timers = {};
 let selectedBoxId = null;
@@ -8,6 +7,7 @@ let config = {};  // この行を追加
 
 $(document).ready(function() {
 
+    /*
     getConfig().then(data => {
         console.log(data);
         config = data;
@@ -30,16 +30,25 @@ $(document).ready(function() {
 
         // タイマーの開始
         $("#timerModal .btn-primary, #timerModal .btn-secondary").on("click", function() {
-            let box = $(`.box[data-box-id="${selectedBoxId}"]`);
-            box.find(".box-body").removeClass("inactive");
+            if (isLoadingSpinnerVisible()) {
+                return;
+            }
             let time = parseInt($(this).data("time"));
-            startTimer(selectedBoxId, time);  // ← ここでstartTimer関数を呼び出します
-            timers[selectedBoxId] = {
-                start_time: new Date().getTime(), // 現在の時刻を開始時間として保存
-                duration: time
-            };
-            updateBoxBasedOnStartTime(selectedBoxId); // 直ちに打席の表示を更新
             $("#timerModal").modal("hide"); // モーダルを非表示にする
+            startTimer(selectedBoxId, time).then(success => {
+                if (success) {
+                    let box = $(`.box[data-box-id="${selectedBoxId}"]`);
+                    box.find(".box-body").removeClass("inactive");
+                    timers[selectedBoxId] = {
+                        start_time: new Date().getTime(), // 現在の時刻を開始時間として保存
+                        duration: time
+                    };
+                    updateBoxBasedOnStartTime(selectedBoxId); // 直ちに打席の表示を更新
+                } else {
+                    console.log("Failed to start timer");
+                    showErrorToast("処理に失敗しました。もう一度実行してください。");
+                }
+            });
         });
 
 
@@ -56,13 +65,101 @@ $(document).ready(function() {
             if (!timers[boxId]) {
                 // タイマーが動作していない打席の場合
                 $(this).find(".box-body").addClass("inactive");
+            } else {
+                $(this).find(".box-body").removeClass("inactive");
             }
         });
     });
+    */
 
-    $(".box").on("click", function() {
-        selectedBoxId = $(this).data("box-id");
+    Promise.all([getConfig(), getTimers()]).then(results => {
+        // getConfigとgetTimersの結果を取得
+        const configData = results[0];
+        const timersData = results[1];
+
+        console.log(configData);
+        config = configData;
+        const weekdayTimers = config["weekday"];
+        const holidayTimers = config["holiday"];
+
+        // 平日のタイマーをセット
+        for (let time of weekdayTimers) {
+            $('#weekday-timers').append(
+                `<button class="btn btn-primary m-1" data-time="${time}">${time}分</button>`
+            );
+        }
+
+        // 休日のタイマーをセット
+        for (let time of holidayTimers) {
+            $('#holiday-timers').append(
+                `<button class="btn btn-secondary m-1" data-time="${time}">${time}分</button>`
+            );
+        }
+
+        // タイマーの開始
+        $("#timerModal .btn-primary, #timerModal .btn-secondary").on("click", function() {
+            if (isLoadingSpinnerVisible()) {
+                return;
+            }
+            let time = parseInt($(this).data("time"));
+            let boxId = selectedBoxId;
         
+            // checkModalに確認メッセージを設定して表示
+            $("#timerModal").modal("hide");
+            $('#checkModalTitle').text("打席開始の確認");
+            $('#checkModalBody').text(`${boxId} 番の打席 ${time} 分 開始しますか？`);
+            $('#checkModal').modal('show');
+            // checkModalのOKボタンがクリックされた場合の処理
+            $('#checkModal .btn-primary').on('click', function() {
+                $("#checkModal").modal("hide");
+        
+                startTimer(selectedBoxId, time).then(success => {
+                    if (success) {
+                        let box = $(`.box[data-box-id="${selectedBoxId}"]`);
+                        box.find(".box-body").removeClass("inactive");
+                        timers[selectedBoxId] = {
+                            start_time: new Date().getTime(),
+                            duration: time
+                        };
+                        updateBoxBasedOnStartTime(selectedBoxId);
+                    } else {
+                        console.log("Failed to start timer");
+                        showErrorToast("処理に失敗しました。もう一度実行してください。");
+                    }
+                });
+            });
+
+
+        });
+        
+
+        // getTimersの結果を処理
+        console.log(timersData);
+        timers = timersData;
+        for (let boxId in timers) {
+            updateBoxBasedOnStartTime(boxId);
+        }
+        $(".box").each(function () {
+            let boxId = $(this).data("box-id");
+            if (!timers[boxId]) {
+                $(this).find(".box-body").addClass("inactive");
+            } else {
+                $(this).find(".box-body").removeClass("inactive");
+            }
+        });
+    }).catch(error => {
+        console.error('Error:', error);
+        showErrorToast("通信エラーが発生しました。再試行してください。");
+    }).finally(() => {
+        document.getElementById("loading-overlay").style.display = "none";
+    });
+
+    $(".box").on("click", function () {
+        if (isLoadingSpinnerVisible()) {
+            return;
+        }
+        selectedBoxId = $(this).data("box-id");
+
         if (!timers[selectedBoxId]) {
             $("#timerModal").modal("show");
         } else {
@@ -71,12 +168,13 @@ $(document).ready(function() {
                 // 打席の使用を終了するかどうかを確認するモーダルを表示
                 $("#endUseModal").modal("show");
             } else {
-                // 打席の使用をキャンセルするかどうかを確認するモーダルを表示
+    // 打席の使用をキャンセルするかどうかを確認するモーダルを表示
                 $("#cancelModal").modal("show");
             }
         }
     });
 
+    /*
     $("#endUseModal .btn-primary").on("click", function() {
         let box = $(`.box[data-box-id="${selectedBoxId}"]`);
         box.find(".box-body").addClass("inactive");
@@ -87,19 +185,58 @@ $(document).ready(function() {
         delete timers[selectedBoxId];  // timersオブジェクトから該当打席の情報を削除
         $("#endUseModal").modal("hide");
     });
+    */
+
+    $("#endUseModal .btn-primary").on("click", function() {
+        if (isLoadingSpinnerVisible()) {
+            return;
+        }
+        // モーダルを非表示にする
+        $("#endUseModal").modal("hide");
+        // endTimer関数が完了した後の処理をthen内に記述
+        endTimer(selectedBoxId)
+            .then(success => {
+                if (success) {
+                    console.log("Timer ended successfully");
+                    let box = $(`.box[data-box-id="${selectedBoxId}"]`);
+                    box.find(".box-body").addClass("inactive");
+                    box.removeClass("flashing");
+                    box.css("background-color", "white");
+                    box.find(".box-body").text("00:00");
+                    // timersオブジェクトから該当打席の情報を削除
+                    delete timers[selectedBoxId];
+                } else {
+                    console.log("Failed to end timer");
+                    showErrorToast("処理に失敗しました。もう一度実行してください。");
+                    // 必要に応じて、エラー時の処理を追加
+                }
+            });
+    });
+
     
 
     // 打席使用キャンセルモーダルのOKボタンをクリックしたときの動作
     $("#cancelModal .btn-primary").on("click", function () {
-        let box = $(`.box[data-box-id="${selectedBoxId}"]`);
-        box.find(".box-body").addClass("inactive");
-        clearInterval(timers[selectedBoxId].intervalId); // タイマーをクリア
-        endTimer(selectedBoxId);  // ← ここでendTimer関数を呼び出します
-        delete timers[selectedBoxId]; // タイマーの情報を削除
-        box.css("background-color", "white");
-        box.find(".box-body").text("00:00");
-        $("#cancelModal").modal("hide"); // モーダルを閉じる
+        if (isLoadingSpinnerVisible()) {
+            return;
+        }
 
+        $("#cancelModal").modal("hide"); // モーダルを閉じる
+        endTimer(selectedBoxId)
+            .then(success => {
+                if (success) {
+                    let box = $(`.box[data-box-id="${selectedBoxId}"]`);
+                    box.find(".box-body").addClass("inactive");
+                    clearInterval(timers[selectedBoxId].intervalId); // タイマーをクリア
+                    box.css("background-color", "white");
+                    box.find(".box-body").text("00:00");
+                    delete timers[selectedBoxId]; // タイマーの情報を削除
+                } else {
+                    console.log("Failed to end timer");
+                    showErrorToast("処理に失敗しました。もう一度実行してください。");
+                    // 必要に応じて、エラー時の処理を追加
+                }
+            });
     });
 
     setInterval(function() {
@@ -133,28 +270,60 @@ function updateBoxBasedOnStartTime(boxId) {
 
 function getConfig() {
     return fetch(GAS_ENDPOINT + "?action=getConfig")
-        .then(response => response.json())
+        .then(response => {
+            // レスポンスが正常でない場合はエラーを投げる
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
         .then(data => {
+            // 応答データが想定外の場合はエラーを投げる
+            if (!Array.isArray(data)) {
+                throw new Error('Unexpected response data');
+            }
+
             const config = {
                 holiday: data.map(item => item[0]),
                 weekday: data.map(item => item[1])
             };
             return config;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            throw error;
         });
 }
 
 function getTimers() {
     return fetch(GAS_ENDPOINT + "?action=getTimers")
-        .then(response => response.json())
+        .then(response => {
+            // レスポンスが正常でない場合はエラーを投げる
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
         .then(data => {
+            // 応答データが想定外の場合はエラーを投げる
+            if (typeof data !== 'object') {
+                throw new Error('Unexpected response data');
+            }
+
             let timers = {};
             timers = data;
             return timers;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            throw error;
         });
 }
 
+
+
+/*
 function startTimer(boxId, duration) {
-    console.log("StartTimer");
     const startTime = new Date();
 
     const data = {
@@ -171,7 +340,112 @@ function startTimer(boxId, duration) {
         body: JSON.stringify(data)
     });
 }
+*/
 
+function startTimer(boxId, duration) {
+    const startTime = new Date();
+
+    const data = {
+        boxId: boxId,
+        startTime: startTime.toISOString(),
+        duration: duration
+    };
+
+    // 対応するローディングスピナーを表示
+    $(`div[data-box-id="${boxId}"] .loading-spinner`).css("display", "block");
+
+    const url = new URL(GAS_ENDPOINT);
+    url.searchParams.append("action", "startTimer");
+    url.searchParams.append("data", JSON.stringify(data));
+
+    // Promiseを返す
+    return fetch(url)
+    .then(response => {
+        // レスポンスが正常でない場合はエラーを投げる
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // ここで成功時の処理を行い、成功を示す値を返す
+        return true;
+    })
+    .catch(error => {
+        // エラーメッセージを表示
+        console.error('Error:', error);
+
+        // エラーだけどtrue
+        return false;
+    })
+    .finally(() => {
+        // 対応するローディングスピナーを非表示にする
+        $(`div[data-box-id="${boxId}"] .loading-spinner`).css("display", "none");
+    });
+}
+
+function showErrorToast(errorMessage) {
+    // Toastのbody部分にエラーメッセージを設定
+    $('#errorToast .toast-body').text(errorMessage);
+    // Toastを表示
+    $('#errorToast').toast('show');
+}
+
+function endTimer(boxId) {
+    // 対応するローディングスピナーを表示
+    $(`div[data-box-id="${boxId}"] .loading-spinner`).css("display", "block");
+
+    const data = { boxId: boxId };
+    const url = new URL(GAS_ENDPOINT);
+    url.searchParams.append("action", "endTimer");
+    url.searchParams.append("data", JSON.stringify(data));
+
+    // Promiseを返す
+    return fetch(url, {
+        method: 'GET',
+    })
+    .then(response => {
+        // レスポンスが正常でない場合はエラーを投げる
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // ここで成功時の処理を行い、成功を示す値を返す
+        return true;
+    })
+    .catch(error => {
+        // エラーメッセージを表示
+        console.error('Error:', error);
+        // エラーを示す値を返す
+        return false;
+    })
+    .finally(() => {
+        // 対応するローディングスピナーを非表示にする
+        $(`div[data-box-id="${boxId}"] .loading-spinner`).css("display", "none");
+    });
+
+
+}
+
+    function isLoadingSpinnerVisible() {
+        // 初期状態では、loading-spinnerは見つからないと仮定
+        let isVisible = false;
+    
+        // 全てのloading-spinnerをチェック
+        $(".loading-spinner").each(function() {
+            // もしdisplayが"none"でなければ、loading-spinnerが見つかったとして処理を抜ける
+            if ($(this).css("display") !== "none") {
+                isVisible = true;
+                return false;
+            }
+        });
+    
+        // loading-spinnerが見つかったかどうかの結果を返す
+        return isVisible;
+    }
+/*
 function endTimer(boxId) {
     fetch(GAS_ENDPOINT + "?action=endTimer", {
         method: 'POST',
@@ -181,6 +455,7 @@ function endTimer(boxId) {
         body: JSON.stringify({ boxId: boxId })
     });
 }
+*/
 
 function updateBox(boxId, time) {
     let box = $(`.box[data-box-id="${boxId}"]`);
