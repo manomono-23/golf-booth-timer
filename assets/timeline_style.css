@@ -1,0 +1,54 @@
+.timeline-entry {
+    position: relative;
+    height: 20px;
+    margin-bottom: 5px;
+}
+
+.reservation {
+    z-index: 1;  /* reservationがactualの上に来るようにする */
+    border-right: 2px solid red;  /* 予約終了時刻を示す */
+    background-color: lightblue;
+    position: absolute;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.actual {
+    border-right: 2px solid green;  /* 実際の終了時刻を示す */
+    background-color: lightgreen;
+    position: absolute;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.timeline-entry {
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.box-id {
+    font-weight: bold;
+    position: absolute;
+    left: 5px;
+    top: 5px;
+}
+
+.time-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 5px;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 5px;
+    border-top: 1px dashed #ccc;
+    position: relative;
+    height: 20px;
+}
+
+.time-labels span {
+    position: relative;
+    top: -20px;
+}
+

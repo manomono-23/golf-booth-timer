@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/timeline_style.css">
+    <title>タイムライン</title>
+</head>
+<body>
+    <div class="container">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-secondary" onclick="loadData('day')">日</button>
+            <button type="button" class="btn btn-secondary" onclick="loadData('week')">週</button>
+            <button type="button" class="btn btn-secondary" onclick="loadData('month')">月</button>
+            <button type="button" class="btn btn-secondary" onclick="loadData('custom')">カスタム</button>
+        </div>
+        <div id="timeline" class="mt-4"></div>
+    </div>
+    <script src="assets/jquery-3.7.1.min.js"></script>
+    <script src="assets/popper.min.js"></script>
+    <script src="assets/bootstrap.min.js"></script>
+    <script src="assets/timeline_script.js"></script>
+</body>
+</html>
