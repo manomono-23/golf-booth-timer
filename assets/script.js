@@ -109,10 +109,11 @@ $(document).ready(function() {
             $('#checkModalTitle').text("打席開始の確認");
             $('#checkModalBody').text(`${boxId} 番の打席 ${time} 分 開始しますか？`);
             $('#checkModal').modal('show');
+
             // checkModalのOKボタンがクリックされた場合の処理
+            $('#checkModal .btn-primary').off('click');
             $('#checkModal .btn-primary').on('click', function() {
                 $("#checkModal").modal("hide");
-        
                 startTimer(selectedBoxId, time).then(success => {
                     if (success) {
                         let box = $(`.box[data-box-id="${selectedBoxId}"]`);
@@ -128,8 +129,6 @@ $(document).ready(function() {
                     }
                 });
             });
-
-
         });
         
 
@@ -357,6 +356,7 @@ function startTimer(boxId, duration) {
     const url = new URL(GAS_ENDPOINT);
     url.searchParams.append("action", "startTimer");
     url.searchParams.append("data", JSON.stringify(data));
+    console.log(url);
 
     // Promiseを返す
     return fetch(url)
