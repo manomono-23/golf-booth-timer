@@ -7,70 +7,6 @@ let config = {};  // この行を追加
 
 $(document).ready(function() {
 
-    /*
-    getConfig().then(data => {
-        console.log(data);
-        config = data;
-        const weekdayTimers = config["weekday"];
-        const holidayTimers = config["holiday"];
-        
-        // 平日のタイマーをセット
-        for (let time of weekdayTimers) {
-            $('#weekday-timers').append(
-                `<button class="btn btn-primary m-1" data-time="${time}">${time}分</button>`
-            );
-        }
-
-        // 休日のタイマーをセット
-        for (let time of holidayTimers) {
-            $('#holiday-timers').append(
-                `<button class="btn btn-secondary m-1" data-time="${time}">${time}分</button>`
-            );
-        }
-
-        // タイマーの開始
-        $("#timerModal .btn-primary, #timerModal .btn-secondary").on("click", function() {
-            if (isLoadingSpinnerVisible()) {
-                return;
-            }
-            let time = parseInt($(this).data("time"));
-            $("#timerModal").modal("hide"); // モーダルを非表示にする
-            startTimer(selectedBoxId, time).then(success => {
-                if (success) {
-                    let box = $(`.box[data-box-id="${selectedBoxId}"]`);
-                    box.find(".box-body").removeClass("inactive");
-                    timers[selectedBoxId] = {
-                        start_time: new Date().getTime(), // 現在の時刻を開始時間として保存
-                        duration: time
-                    };
-                    updateBoxBasedOnStartTime(selectedBoxId); // 直ちに打席の表示を更新
-                } else {
-                    console.log("Failed to start timer");
-                    showErrorToast("処理に失敗しました。もう一度実行してください。");
-                }
-            });
-        });
-
-
-    });
-
-    getTimers().then(data => {
-        console.log(data);
-        timers = data;
-        for (let boxId in timers) {
-            updateBoxBasedOnStartTime(boxId);
-        }
-        $(".box").each(function() {
-            let boxId = $(this).data("box-id");
-            if (!timers[boxId]) {
-                // タイマーが動作していない打席の場合
-                $(this).find(".box-body").addClass("inactive");
-            } else {
-                $(this).find(".box-body").removeClass("inactive");
-            }
-        });
-    });
-    */
 
     Promise.all([getConfig(), getTimers()]).then(results => {
         // getConfigとgetTimersの結果を取得
@@ -123,6 +59,8 @@ $(document).ready(function() {
                             duration: time
                         };
                         updateBoxBasedOnStartTime(selectedBoxId);
+
+
                     } else {
                         console.log("Failed to start timer");
                         showErrorToast("処理に失敗しました。もう一度実行してください。");
@@ -151,6 +89,19 @@ $(document).ready(function() {
         showErrorToast("通信エラーが発生しました。再試行してください。");
     }).finally(() => {
         document.getElementById("loading-overlay").style.display = "none";
+
+        // URLのパラメータを取得
+        var params = new URLSearchParams(window.location.search);
+    
+        // readonlyパラメータがtrueの場合
+        if (params.get('readonly') === 'true') {
+            // clickイベントを無効にする
+            $('*').off('click');
+
+            // /timeline.htmlへのリンクを下部に追加
+            $('body').append('<a href="timeline.html" id="timeline-link">タイムライン表示</a>');
+        }
+
     });
 
     $(".box").on("click", function () {
@@ -172,19 +123,6 @@ $(document).ready(function() {
             }
         }
     });
-
-    /*
-    $("#endUseModal .btn-primary").on("click", function() {
-        let box = $(`.box[data-box-id="${selectedBoxId}"]`);
-        box.find(".box-body").addClass("inactive");
-        box.removeClass("flashing");
-        box.css("background-color", "white");
-        box.find(".box-body").text("00:00");
-        endTimer(selectedBoxId);  // ← ここでendTimer関数を呼び出します
-        delete timers[selectedBoxId];  // timersオブジェクトから該当打席の情報を削除
-        $("#endUseModal").modal("hide");
-    });
-    */
 
     $("#endUseModal .btn-primary").on("click", function() {
         if (isLoadingSpinnerVisible()) {
@@ -320,27 +258,6 @@ function getTimers() {
 }
 
 
-
-/*
-function startTimer(boxId, duration) {
-    const startTime = new Date();
-
-    const data = {
-        boxId: boxId,
-        startTime: startTime.toISOString(),
-        duration: duration
-    };
-
-    fetch(GAS_ENDPOINT + "?action=startTimer", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: JSON.stringify(data)
-    });
-}
-*/
-
 function startTimer(boxId, duration) {
     const startTime = new Date();
 
@@ -445,17 +362,7 @@ function endTimer(boxId) {
         // loading-spinnerが見つかったかどうかの結果を返す
         return isVisible;
     }
-/*
-function endTimer(boxId) {
-    fetch(GAS_ENDPOINT + "?action=endTimer", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: JSON.stringify({ boxId: boxId })
-    });
-}
-*/
+
 
 function updateBox(boxId, time) {
     let box = $(`.box[data-box-id="${boxId}"]`);

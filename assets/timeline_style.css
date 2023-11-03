@@ -1,54 +1,63 @@
-.timeline-entry {
-    position: relative;
-    height: 20px;
-    margin-bottom: 5px;
+#visualization {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100vh;
 }
 
-.reservation {
-    z-index: 1;  /* reservationがactualの上に来るようにする */
-    border-right: 2px solid red;  /* 予約終了時刻を示す */
-    background-color: lightblue;
+.early-end-line {
     position: absolute;
-    height: 100%;
-    border-radius: 5px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: red;
+    border-left: 1px dashed red;
+}
+
+.planned-end {
+    background-color: lightgreen;
+}
+
+.dotted-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: black;
+}
+
+.dotted-background {
+    border-style: dashed;
+    border-color: transparent;
+}
+
+.delay-background {
+    background-color: rgba(255, 0, 0, 1.0);
 }
 
 .actual {
-    border-right: 2px solid green;  /* 実際の終了時刻を示す */
-    background-color: lightgreen;
-    position: absolute;
+    display: inline-block;
     height: 100%;
-    border-radius: 5px;
+    background-color: #97B0F8;  /* 背景色を変更してください */
 }
 
-.timeline-entry {
-    border: 1px solid #ccc;
-    padding: 5px;
-    margin-bottom: 5px;
-    position: relative;
+.early-end {
+    display: inline-block;
+    height: 100%;
+    border: 1px dashed #000;
 }
 
-.box-id {
-    font-weight: bold;
-    position: absolute;
-    left: 5px;
-    top: 5px;
+.late-end {
+    display: inline-block;
+    height: 100%;
+    background-color: red;
 }
 
-.time-labels {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 5px;
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 5px;
-    border-top: 1px dashed #ccc;
-    position: relative;
-    height: 20px;
+.dotted-box {
+    border: 1px dashed #ddd;
+    background: #eeeeee99;
 }
 
-.time-labels span {
-    position: relative;
-    top: -20px;
+.late-box {
+    background-color: #f9606095;
 }
 

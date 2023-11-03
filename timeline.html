@@ -2,24 +2,23 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>タイムライン表示</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="assets/timeline_style.css">
-    <title>タイムライン</title>
 </head>
 <body>
     <div class="container">
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-secondary" onclick="loadData('day')">日</button>
-            <button type="button" class="btn btn-secondary" onclick="loadData('week')">週</button>
-            <button type="button" class="btn btn-secondary" onclick="loadData('month')">月</button>
-            <button type="button" class="btn btn-secondary" onclick="loadData('custom')">カスタム</button>
-        </div>
-        <div id="timeline" class="mt-4"></div>
+        <h2 class="mt-4">タイムライン表示</h2>
+        <input type="date" id="datePicker" class="form-control mb-4">
+        <div id="visualization"></div>
     </div>
-    <script src="assets/jquery-3.7.1.min.js"></script>
-    <script src="assets/popper.min.js"></script>
-    <script src="assets/bootstrap.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="assets/timeline_script.js"></script>
 </body>
 </html>

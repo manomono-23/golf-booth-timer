@@ -1,55 +1,106 @@
 $(document).ready(function() {
-    renderTimelineLabels();
-    loadData('day');  // デフォルトで「日」を選択
+    const container = document.getElementById('visualization');
+    const groups = Array.from({ length: 36 }, (_, i) => ({id: i + 1, content: `Box ${i + 1}`}));
+
+    const items = new vis.DataSet();  // DataSetを作成
+
+    let allData = [];
+
+    function fetchData() {
+        const url = "https://script.google.com/macros/s/AKfycbwALrSQ1naaxY9terQ_wSlNF9YyQXWV_ufRlQY1dxfKMEj6Welw-48eQMxwfajCE_qC4A/exec";
+        $.getJSON(url, function(data) {
+            allData = data;
+            const currentDate = new Date().toISOString().split('T')[0];
+            $('#datePicker').val(currentDate);
+            renderData(currentDate);
+        });
+    }
+
+    function renderData(date) {
+        console.log(allData);
+        const filteredData = allData.filter(entry => {
+            const entryDate = moment.utc(entry['Start Time']).local().format('YYYY-MM-DD');
+            return entryDate === date;
+        });
+        console.log(filteredData);
+
+        const newItems = filteredData.flatMap((entry, index) => {
+            const start = new Date(entry['Start Time']);
+            const end = new Date(entry['End Time']);
+            const duration = entry['Duration (mins)'] * 60000;
+            const reservedEnd = new Date(start.getTime() + duration);
+            const groupId = parseInt(entry['Box ID']);
+            const earlyEnd = end.getTime() < reservedEnd.getTime();
+            const lateEnd = end.getTime() > reservedEnd.getTime();
+
+            const items = [
+                {
+                    id: `${index}-normal`,
+                    group: groupId,
+                    start: start,
+                    end: earlyEnd ? end : reservedEnd,
+                    content: '',
+                    title: `開始: ${start.toLocaleString()}<br>終了: ${end.toLocaleString()}<br>利用時間: ${entry['Duration (mins)']} 分`
+                }
+            ];
+
+            if (earlyEnd) {
+                items.push({
+                    id: `${index}-early`,
+                    group: groupId,
+                    start: end,
+                    end: reservedEnd,
+                    className: 'dotted-box',
+                    title: `予定終了時間: ${reservedEnd.toLocaleString()}`
+                });
+            } else if (lateEnd) {
+                items.push({
+                    id: `${index}-late`,
+                    group: groupId,
+                    start: reservedEnd,
+                    end: end,
+                    className: 'late-box',
+                    title: `超過時間: ${((end - reservedEnd) / 60000).toFixed(0)} 分`
+                });
+            }
+
+            return items;
+        });
+
+        const startDate = new Date(date);
+        startDate.setHours(6, 0, 0, 0);
+        const endDate = new Date(date);
+        endDate.setHours(18, 0, 0, 0);
+
+        const options = {
+            start: startDate,
+            end: endDate,
+            min: startDate,
+            max: endDate,
+            clickToUse: true,
+            stack: false,
+            zoomable: false,
+            tooltip: {
+                followMouse: true,
+                overflowMethod: 'cap'
+            },
+            orientation: {
+                axis: 'both',  // 時間軸を上部に移動
+                item: 'bottom'
+            }
+        };
+
+        timeline.setOptions(options);  // オプションのみを更新
+        items.clear();  // DataSetのアイテムをクリア
+        items.add(newItems);  // DataSetに新しいアイテムを追加
+    }
+
+    const timeline = new vis.Timeline(container, items, groups);
+
+    $('#datePicker').on('change', function() {
+        const date = $(this).val();
+        renderData(date);
+    });
+
+    fetchData();
 });
-
-function loadData(period) {
-    const url = "https://script.google.com/macros/s/AKfycbyML8uxIvza5FRzSFNk42arYrmMRD4Wq-YW1Tjse4Wnyld7Dsu10oAJHNcr4HtKHe47HQ/exec";
-
-    $.get(`${url}?period=${period}`, function(data) {
-        const timelineContainer = $('#timeline');
-        timelineContainer.empty();
-
-        for (let i = 1; i <= 36; i++) {
-
-            const boxData = data.filter(d => d.boxId === i);
-            const timelineEntry = $('<div>').addClass('timeline-entry');
-
-            boxData.forEach(d => {
-                const reservation = $('<div>').addClass('reservation')
-                    .css('left', calculatePosition(d.startTime, period) + '%')
-                    .css('width', calculateWidth(d.duration, period) + '%');
-                timelineEntry.append(reservation);
-
-                const actual = $('<div>').addClass('actual')
-                    .css('left', calculatePosition(d.startTime, period) + '%')
-                    .css('width', calculateWidth((new Date(d.endTime)).getTime() - (new Date(d.startTime)).getTime(), period) + '%');
-                timelineEntry.append(actual);
-            });
-
-            timelineContainer.append(timelineEntry);
-            const boxIdLabel = $('<div>').addClass('box-id').text(`Box ID: ${i}`);
-            timelineEntry.append(boxIdLabel);
-        }
-    });
-}
-
-function calculatePosition(time, period) {
-    const startOfDay = new Date(time).setHours(6, 0, 0, 0);
-    const ms = new Date(time).getTime() - startOfDay;
-    return (ms / (12 * 60 * 60 * 1000)) * 100;  // 6時から18時までのスパンを基準として計算
-}
-
-function calculateWidth(duration, period) {
-    return (duration / (12 * 60 * 60 * 1000)) * 100;  // 6時から18時までのスパンを基準として計算
-}
-
-function renderTimelineLabels() {
-    const timelineContainer = $('#timeline');
-    const labels = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-    const timeLabels = $('<div>').addClass('time-labels');
-    labels.forEach(label => {
-        timeLabels.append($('<span>').text(label));
-    });
-    timelineContainer.append(timeLabels);
-}
