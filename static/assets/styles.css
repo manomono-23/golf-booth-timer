@@ -166,10 +166,20 @@ h3 {
 
 /* モーダルのスタイル調整 */
 .modal-title {
+    font-size: 2.0rem;
     color: #333;
 }
 
 .modal-body {
+    font-size: 1.5rem;
+}
+
+.modal-footer button {
+    font-size: 1.5rem;
+}
+
+.modal-body h6 {
+    font-size: 1.5rem;
     color: #555;
 }
 
@@ -181,4 +191,17 @@ h3 {
 .btn-secondary {
     background-color: #6c757d;
     border-color: #6c757d;
+}
+
+#weekday-timers button {
+    font-size:1.5rem;
+}
+
+#holiday-timers button {
+    font-size:1.5rem;
+}
+
+.modal-dialog {
+    max-width: 70%; /* モーダルの最大幅を画面の90%に設定 */
+    margin: 30px auto; /* 上下のマージンを30pxに設定 */
 }

@@ -13,7 +13,6 @@ $(document).ready(function() {
         const configData = results[0];
         const timersData = results[1];
 
-        console.log(configData);
         config = configData;
         const weekdayTimers = config["weekday"];
         const holidayTimers = config["holiday"];
@@ -62,7 +61,6 @@ $(document).ready(function() {
 
 
                     } else {
-                        console.log("Failed to start timer");
                         showErrorToast("処理に失敗しました。もう一度実行してください。");
                     }
                 });
@@ -71,7 +69,6 @@ $(document).ready(function() {
         
 
         // getTimersの結果を処理
-        console.log(timersData);
         timers = timersData;
         for (let boxId in timers) {
             updateBoxBasedOnStartTime(boxId);
@@ -85,7 +82,6 @@ $(document).ready(function() {
             }
         });
     }).catch(error => {
-        console.error('Error:', error);
         showErrorToast("通信エラーが発生しました。再試行してください。");
     }).finally(() => {
         document.getElementById("loading-overlay").style.display = "none";
@@ -111,14 +107,17 @@ $(document).ready(function() {
         selectedBoxId = $(this).data("box-id");
 
         if (!timers[selectedBoxId]) {
+            $("#timerModal .modal-title").text(`${selectedBoxId}番の打席の利用時間を選択`);
             $("#timerModal").modal("show");
         } else {
             let box = $(`.box[data-box-id="${selectedBoxId}"]`);
             if (box.hasClass("flashing")) {
                 // 打席の使用を終了するかどうかを確認するモーダルを表示
+                $("#endUseModal .modal-body").text(`${selectedBoxId}番の打席の使用を終了しますか?`);
                 $("#endUseModal").modal("show");
             } else {
-    // 打席の使用をキャンセルするかどうかを確認するモーダルを表示
+                // 打席の使用をキャンセルするかどうかを確認するモーダルを表示
+                $("#cancelModal .modal-body").text(`${selectedBoxId}番の打席の使用をキャンセルしますか?`);
                 $("#cancelModal").modal("show");
             }
         }
@@ -134,7 +133,6 @@ $(document).ready(function() {
         endTimer(selectedBoxId)
             .then(success => {
                 if (success) {
-                    console.log("Timer ended successfully");
                     let box = $(`.box[data-box-id="${selectedBoxId}"]`);
                     box.find(".box-body").addClass("inactive");
                     box.removeClass("flashing");
@@ -143,7 +141,6 @@ $(document).ready(function() {
                     // timersオブジェクトから該当打席の情報を削除
                     delete timers[selectedBoxId];
                 } else {
-                    console.log("Failed to end timer");
                     showErrorToast("処理に失敗しました。もう一度実行してください。");
                     // 必要に応じて、エラー時の処理を追加
                 }
@@ -169,7 +166,6 @@ $(document).ready(function() {
                     box.find(".box-body").text("00:00");
                     delete timers[selectedBoxId]; // タイマーの情報を削除
                 } else {
-                    console.log("Failed to end timer");
                     showErrorToast("処理に失敗しました。もう一度実行してください。");
                     // 必要に応じて、エラー時の処理を追加
                 }
@@ -227,7 +223,6 @@ function getConfig() {
             return config;
         })
         .catch(error => {
-            console.error('Error:', error);
             throw error;
         });
 }
@@ -252,7 +247,6 @@ function getTimers() {
             return timers;
         })
         .catch(error => {
-            console.error('Error:', error);
             throw error;
         });
 }
@@ -273,7 +267,6 @@ function startTimer(boxId, duration) {
     const url = new URL(GAS_ENDPOINT);
     url.searchParams.append("action", "startTimer");
     url.searchParams.append("data", JSON.stringify(data));
-    console.log(url);
 
     // Promiseを返す
     return fetch(url)
@@ -290,7 +283,6 @@ function startTimer(boxId, duration) {
     })
     .catch(error => {
         // エラーメッセージを表示
-        console.error('Error:', error);
 
         // エラーだけどtrue
         return false;
@@ -334,7 +326,6 @@ function endTimer(boxId) {
     })
     .catch(error => {
         // エラーメッセージを表示
-        console.error('Error:', error);
         // エラーを示す値を返す
         return false;
     })
