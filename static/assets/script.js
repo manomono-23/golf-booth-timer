@@ -1,4 +1,4 @@
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwR0C4y_OGx9rbyZQosiDfF141ODi0omCYiH1ao-qcA3npbzf9OjEuLnh8BoFA-Bddi/exec";
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnelYi0vNupNIwmmBIIbUQRKrinP0fEuFn_V1SVJdVB9Kb9e6kleHFVilM1EXoREAzZA/exec"
 
 let timers = {};
 let selectedBoxId = null;
