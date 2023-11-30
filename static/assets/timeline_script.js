@@ -7,11 +7,7 @@ $(document).ready(function() {
     let allData = [];
 
     function fetchData() {
-        // for Prod
-        const url = "https://script.google.com/macros/s/AKfycbwALrSQ1naaxY9terQ_wSlNF9YyQXWV_ufRlQY1dxfKMEj6Welw-48eQMxwfajCE_qC4A/exec";
-        // for Dev
-        //const url = "https://script.google.com/macros/s/AKfycbwFOh5d83nBv-5M2IEFxNkpq94Rk9j7RA5QrgieomHACKgI3BqLAGUMX5uG7mHAKpE5/exec"
-        $.getJSON(url, function(data) {
+        $.getJSON(TL_GAS, function(data) {
             allData = data;
             const currentDate = new Date().toISOString().split('T')[0];
             $('#datePicker').val(currentDate);
