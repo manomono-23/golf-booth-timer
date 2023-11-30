@@ -1,1 +1,0 @@
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnelYi0vNupNIwmmBIIbUQRKrinP0fEuFn_V1SVJdVB9Kb9e6kleHFVilM1EXoREAzZA/exec"
