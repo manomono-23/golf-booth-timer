@@ -190,7 +190,7 @@ $(document).ready(function() {
 });
 
 function updateBoxBasedOnStartTime(boxId) {
-    if (timers[boxId].duration == 'カゴ打ち') {
+    if (timers[boxId].duration == 'カゴ打ち' || timers[boxId].duration == -1) {
         updateBox(boxId, -1)
         return;
     }
