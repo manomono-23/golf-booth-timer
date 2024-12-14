@@ -17,16 +17,24 @@ $(document).ready(function() {
 
         // 平日のタイマーをセット
         for (let time of weekdayTimers) {
-            $('#weekday-timers').append(
-                `<button class="btn btn-primary m-1" data-time="${time}">${time}分</button>`
-            );
+            if (time === "カゴ打ち") {
+                $('#weekday-timers').append(
+                    `<button class="btn btn-primary m-1" data-time="-1">カゴ打ち</button>`
+                );
+            } else {
+                $('#weekday-timers').append(
+                    `<button class="btn btn-primary m-1" data-time="${time}">${time}分</button>`
+                );
+            }
         }
 
         // 休日のタイマーをセット
         for (let time of holidayTimers) {
-            $('#holiday-timers').append(
-                `<button class="btn btn-secondary m-1" data-time="${time}">${time}分</button>`
-            );
+            if (time !== "") {
+                $('#holiday-timers').append(
+                    `<button class="btn btn-secondary m-1" data-time="${time}">${time}分</button>`
+                );
+            }
         }
 
         // タイマーの開始
@@ -40,7 +48,11 @@ $(document).ready(function() {
             // checkModalに確認メッセージを設定して表示
             $("#timerModal").modal("hide");
             $('#checkModalTitle').text("打席開始の確認");
-            $('#checkModalBody').text(`${boxId} 番の打席 ${time} 分 開始しますか？`);
+            if (time == -1) {
+                $('#checkModalBody').text(`${boxId} 番の打席 カゴ打ち 開始しますか？`);
+            } else {
+                $('#checkModalBody').text(`${boxId} 番の打席 ${time} 分 開始しますか？`);
+            }
             $('#checkModal').modal('show');
 
             // checkModalのOKボタンがクリックされた場合の処理
@@ -178,6 +190,10 @@ $(document).ready(function() {
 });
 
 function updateBoxBasedOnStartTime(boxId) {
+    if (timers[boxId].duration == 'カゴ打ち') {
+        updateBox(boxId, -1)
+        return;
+    }
     let startTime = new Date(timers[boxId].start_time);
     let duration = timers[boxId].duration * 60;
     let elapsedTime = Math.floor((new Date().getTime() - startTime) / 1000);
@@ -355,6 +371,11 @@ function endTimer(boxId) {
 
 function updateBox(boxId, time) {
     let box = $(`.box[data-box-id="${boxId}"]`);
+    if (time == -1) {
+        box.find(".box-body").text("カゴ打ち");
+        box.css("background-color", "lightblue");
+        return;
+    }
     let minutes = Math.floor(time / 60);
     let seconds = time % 60;
     box.find(".box-body").text(`${minutes}:${seconds.toString().padStart(2, '0')}`);
