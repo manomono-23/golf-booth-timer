@@ -372,7 +372,7 @@ function endTimer(boxId) {
 function updateBox(boxId, time) {
     let box = $(`.box[data-box-id="${boxId}"]`);
     if (time == -1) {
-        box.find(".box-body").text("カゴ打ち");
+        box.find(".box-body").text("カゴ打ち").css("font-size", "1.3rem");
         box.css("background-color", "lightblue");
         return;
     }
