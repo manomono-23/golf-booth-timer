@@ -17,9 +17,9 @@ $(document).ready(function() {
 
         // 平日のタイマーをセット
         for (let time of weekdayTimers) {
-            if (time === "カゴ打ち") {
+            if (isNaN(time)) {
                 $('#weekday-timers').append(
-                    `<button class="btn btn-primary m-1" data-time="-1">カゴ打ち</button>`
+                    `<button class="btn btn-primary m-1" data-time="${time}">${time}</button>`
                 );
             } else {
                 $('#weekday-timers').append(
@@ -42,15 +42,16 @@ $(document).ready(function() {
             if (isLoadingSpinnerVisible()) {
                 return;
             }
-            let time = parseInt($(this).data("time"));
+            let time = $(this).data("time");
             let boxId = selectedBoxId;
         
             // checkModalに確認メッセージを設定して表示
             $("#timerModal").modal("hide");
             $('#checkModalTitle').text("打席開始の確認");
-            if (time == -1) {
-                $('#checkModalBody').text(`${boxId} 番の打席 カゴ打ち 開始しますか？`);
+            if (isNaN(time)) {
+                $('#checkModalBody').text(`${boxId} 番の打席 ${time} 開始しますか？`);
             } else {
+                time = parseInt(time);
                 $('#checkModalBody').text(`${boxId} 番の打席 ${time} 分 開始しますか？`);
             }
             $('#checkModal').modal('show');
@@ -173,7 +174,7 @@ $(document).ready(function() {
                     box.find(".box-body").addClass("inactive");
                     clearInterval(timers[selectedBoxId].intervalId); // タイマーをクリア
                     box.css("background-color", "white");
-                    box.find(".box-body").text("00:00");
+                    box.find(".box-body").text("00:00").css("font-size", "2.0rem");
                     delete timers[selectedBoxId]; // タイマーの情報を削除
                 } else {
                     showErrorToast("処理に失敗しました。もう一度実行してください。");
@@ -190,8 +191,8 @@ $(document).ready(function() {
 });
 
 function updateBoxBasedOnStartTime(boxId) {
-    if (timers[boxId].duration == 'カゴ打ち' || timers[boxId].duration == -1) {
-        updateBox(boxId, -1)
+    if (isNaN(timers[boxId].duration)) {
+        updateBox(boxId, timers[boxId].duration)
         return;
     }
     let startTime = new Date(timers[boxId].start_time);
@@ -371,10 +372,16 @@ function endTimer(boxId) {
 
 function updateBox(boxId, time) {
     let box = $(`.box[data-box-id="${boxId}"]`);
-    if (time == -1) {
-        box.find(".box-body").text("カゴ打ち").css("font-size", "1.3rem");
-        box.css("background-color", "lightblue");
+    if (isNaN(time)) {
+        box.find(".box-body").text(time).css("font-size", "1.3rem");
+        if (time === "カゴ打ち") {
+            box.css("background-color", "lightblue");
+        } else if (time === "スクール") {
+            box.css("background-color", "moccasin");
+        }
         return;
+    } else {
+        box.find(".box-body").text(time).css("font-size", "2.0rem");
     }
     let minutes = Math.floor(time / 60);
     let seconds = time % 60;
